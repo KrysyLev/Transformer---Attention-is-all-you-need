@@ -125,3 +125,39 @@ class MultiheadAttentionBlock(nn.Module):
         
         # (Batch, seq_len, d_model) --> (Batch, seq_len, d_model)
         return self.w_o(x)
+    
+class ResidualConnection(nn.Module):
+    def __init__(self, dropout: float) -> None:
+        super().__init__()
+        self.dropout = nn.Dropout(dropout)
+        self.norm = LayerNormalization()
+    
+    def forward(self, x, sublayer):
+        return x + self.dropout(sublayer(self.norm(x))) #Some implements do the norm before sublayer
+    
+
+class EncoderBlock(nn.Module):
+    def __init__(self, self_attention_block: MultiheadAttentionBlock, feed_forward_block: FeedForwardBlock, dropout: float) -> None:
+        super().__init__()
+        self.self_attention_block = self_attention_block
+        self.feed_forward_block = feed_forward_block
+        self.residual_connections = nn.ModuleList([ResidualConnection(dropout) for _ in range(2)]) #need 2 Res block
+        
+    def forward(self, x, src_mask):
+        x = self.residual_connections[0](x, lambda x: self.self_attention_block(x, x, x, src_mask))
+        x = self.residual_connections[1](x, self.feed_forward_block)
+        
+        return x
+
+class Encoder(nn.Module):
+    def __init__(self, layers: nn.ModuleList) -> None:
+        super().__init__()
+        self.layers = layers
+        self.norm = LayerNormalization()
+    
+    def forward(self, x, mask):
+        for layer in self.layers:
+            x = layer(x, mask)
+        return self.norm(x) 
+#     The original Transformer paper (Attention is All You Need) does not apply normalization at the end.
+# But modern implementations (like fairseq, Hugging Face Transformers) do, because it improves stability.
