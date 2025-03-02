@@ -22,3 +22,4 @@ def get_weight_file_path(config, epoch: str):
     model_basename = config["model_basename"]
     model_filename = f"{model_basename}{epoch}.pt"
     return str(Path(".") / model_folder / model_filename)
+
