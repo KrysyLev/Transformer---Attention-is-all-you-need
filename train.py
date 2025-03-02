@@ -11,6 +11,8 @@ from tokenizers.pre_tokenizers import Whitespace
 
 from pathlib import Path
 
+from model import build_transformer
+
 
 def get_all_sentences(ds, lang):
     for item in ds:
@@ -89,3 +91,17 @@ def get_ds(config):
     )  # Set batch_size = 1 due to we want to go 1-1 validation
 
     return train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt
+
+
+def get_model(config, vocab_src_len, vocab_tgt_len):
+    seq_len = config["seq_len"]
+
+    model = build_transformer(
+        src_vocab_size=vocab_src_len,
+        tgt_vocab_size=vocab_tgt_len,
+        src_seq_len=seq_len,
+        tgt_seq_len=seq_len,
+        d_model=config["d_model"],
+    )
+
+    return model
