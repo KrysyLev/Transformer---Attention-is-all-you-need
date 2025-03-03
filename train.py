@@ -16,6 +16,7 @@ from model import build_transformer
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
+import warnings
 
 def get_all_sentences(ds, lang):
     for item in ds:
@@ -127,7 +128,7 @@ def train_model(config):
         vocab_tgt_len=tokenizer_tgt.get_vocab_size(),
     ).to(device=device)
     # Define the tensorboard
-    writer = SummaryWriter(config["experiment_name"])
+    writer = SummaryWriter(config["experiment_name"]) #Visualizing the training process
 
     optimizer = torch.optim.Adam(model.parameters, lr=config["lr"], eps=1e-9)
 
@@ -146,28 +147,56 @@ def train_model(config):
         ignore_index=tokenizer_src.token_to_id("[PAD]"), label_smoothing=0.1
     ).to(device=device)
 
-    # for epoch in range(initial_epoch, config["num_epochs"]):
-    #     model.train()
-    #     batch_iter = tqdm(train_dataloader, desc=f"Processing epoch: {epoch:02d}")
+    for epoch in range(initial_epoch, config["num_epochs"]):
+        model.train()
+        batch_iter = tqdm(train_dataloader, desc=f"Processing epoch: {epoch:02d}") #Progress bar
 
-    #     for batch in batch_iter:
-    #         encoder_input = batch['encoder_input'].to(device) #(Batch, seq_len)
-    #         decoder_input = batch['decoder_input'].to(device) #(Batch, seq_len)
-    #         encoder_mask = batch['encoder_mask'].to(device) #(Batch, 1, 1, seq_len)
-    #         decoder_mask = batch['decoder_mask'].to(device) #(Batch, 1, seq_len, seq_len)
+        for batch in batch_iter:
+            encoder_input = batch['encoder_input'].to(device) #(Batch, seq_len)
+            decoder_input = batch['decoder_input'].to(device) #(Batch, seq_len)
+            encoder_mask = batch['encoder_mask'].to(device) #(Batch, 1, 1, seq_len)
+            decoder_mask = batch['decoder_mask'].to(device) #(Batch, 1, seq_len, seq_len)
             
-    #         #Run through the transformer
+            #Run through the transformer
             
-    #         encoder_output = model.encode(encoder_input, encoder_mask) #(Batch, seq_len, d_model)
-    #         decoder_output = model.decode(encoder_input, encoder_mask, decoder_input, decoder_mask) #(Batch, seq_len, d_model)
-    #         proj_output = model.project(decoder_output) #(Batch, seq_len, tgt_vocab_size)
+            encoder_output = model.encode(encoder_input, encoder_mask) #(Batch, seq_len, d_model)
+            decoder_output = model.decode(encoder_output, encoder_mask, decoder_input, decoder_mask) #(Batch, seq_len, d_model)
+            proj_output = model.project(decoder_output) #(Batch, seq_len, tgt_vocab_size)
             
-    #         label = batch['label'].to(device) #(Batch, seq_len)
+            label = batch['label'].to(device) #(Batch, seq_len)
             
-    #         #(B, )
-    #         loss = loss_fn(proj_output.view(-1, tokenizer_tgt.get_vocab_size()), label.view(-1))
-    #         batch_iter.set_postfix({f"loss": f"{loss.item():6.3f}"})
+            #(Batch, seq_len, tgt_vocab_size) --> #(Batch * seq_len, tgt_vocab_size)
+            loss = loss_fn(proj_output.view(-1, tokenizer_tgt.get_vocab_size()), label.view(-1))
+            batch_iter.set_postfix({f"loss": f"{loss.item():6.3f}"})
             
             
+            #Log the loss
+            writer.add_scalar('train loss:', loss.item(), global_step)
+            writer.flush()
+            
+            #Backpropagate the loss
+            loss.backward()
+            
+            #Update the weights
+            optimizer.step()
+            optimizer.zero_grad()
+            
+            global_step += 1
+        
+        # Save the model at the end of every epoch
+        model_filename = get_weight_file_path(config, f'{epoch:02d}')
+        torch.save(
+            {
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'global_step': global_step
+            }, model_filename
+        )
+            
+if __name__ == '__main__':
+    warnings.filterwarnings('ignore')
+    config = get_config()
+    train_model(config=config)
             
         
