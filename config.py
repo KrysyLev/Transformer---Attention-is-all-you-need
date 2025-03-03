@@ -7,13 +7,15 @@ def get_config():
         "num_epochs": 20,
         "lr": 10**-4,
         "seq_len": 350,
+        "d_model": 512,
         "lang_src": "en",
-        "tgt_src": "fr",
+        "lang_tgt": "fr",
         "model_folder": "weights",
         "model_basename": "tmodel_",
         "preload": None,
         "tokenizer_file": "tokenizer_{0}.json",
         "experiment_name": "runs/tmodel",
+        "datasource": 'opus_books',
     }
 
 
@@ -22,4 +24,3 @@ def get_weight_file_path(config, epoch: str):
     model_basename = config["model_basename"]
     model_filename = f"{model_basename}{epoch}.pt"
     return str(Path(".") / model_folder / model_filename)
-

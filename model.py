@@ -84,7 +84,7 @@ class MultiheadAttentionBlock(nn.Module):
         self.h = h
         assert d_model % h == 0, "d_model is not divisible by h"
 
-        self.dk = d_model // h
+        self.d_k = d_model // h
         self.w_q = nn.Linear(d_model, d_model)  # Wq
         self.w_k = nn.Linear(d_model, d_model)  # Wk
         self.w_v = nn.Linear(d_model, d_model)  # Wv
@@ -121,7 +121,7 @@ class MultiheadAttentionBlock(nn.Module):
         x, self.attention_scores = MultiheadAttentionBlock.attention(query, key, value, mask, self.dropout)
         
         #(Batch, h, seq_len, d_k) --> (Batch, seq_len, h, d_k) --> (Batch, seq_len, d_model)
-        x = x.tranpose(1, 2).contiguous().view(x.shape[0], -1, self.h * self.d_k) #contiguous force the pytorch to take the transpose into memory
+        x = x.transpose(1, 2).contiguous().view(x.shape[0], -1, self.h * self.d_k) #contiguous force the pytorch to take the transpose into memory
         
         # (Batch, seq_len, d_model) --> (Batch, seq_len, d_model)
         return self.w_o(x)
@@ -168,7 +168,7 @@ class DecoderBlock(nn.Module):
         self.self_attention_block = self_attention_block
         self.cross_attention_block = cross_attention_block
         self.feed_forward_block = feed_foward_block
-        self.residual_connections = nn.Module([ResidualConnection(dropout) for _ in range(3)])
+        self.residual_connections = nn.ModuleList([ResidualConnection(dropout) for _ in range(3)])
         
     def forward(self, x, encoder_output, src_mask, tgt_mask):
         x = self.residual_connections[0](x, lambda x : self.self_attention_block(x, x, x, tgt_mask))
@@ -236,9 +236,9 @@ def build_transformer(src_vocab_size: int, tgt_vocab_size: int, src_seq_len: int
     for _ in range(N):
         encoder_self_attention_block = MultiheadAttentionBlock(d_model, h, dropout)
         feed_forward_block = FeedForwardBlock(d_model, d_ff, dropout)
-        encoder_blocks = EncoderBlock(encoder_self_attention_block, feed_forward_block, dropout)
+        encoder_block = EncoderBlock(encoder_self_attention_block, feed_forward_block, dropout)
         
-        encoder_blocks.append(encoder_blocks)
+        encoder_blocks.append(encoder_block)
     
     #Create the decoder blocks
     decoder_blocks = []

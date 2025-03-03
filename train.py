@@ -1,8 +1,10 @@
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, Dataloader, random_split
+from torch.utils.data import Dataset, DataLoader, random_split
 
 from dataset import BilingualDataset, casual_mask
+
+# Huggingface datasets and tokenizers
 from datasets import load_dataset
 from tokenizers import Tokenizer
 from tokenizers.models import WordLevel
@@ -87,10 +89,10 @@ def get_ds(config):
     print(f"Max length of source sentence: {max_len_src}")
     print(f"Max length of target sentence: {max_len_tgt}")
 
-    train_dataloader = Dataloader(
+    train_dataloader = DataLoader(
         train_ds, batch_size=config["batch_size"], shuffle=True
     )
-    val_dataloader = Dataloader(
+    val_dataloader = DataLoader(
         val_ds, batch_size=1, shuffle=True
     )  # Set batch_size = 1 due to we want to go 1-1 validation
 
@@ -113,7 +115,7 @@ def get_model(config, vocab_src_len, vocab_tgt_len):
 
 def train_model(config):
     # Define the device
-    device = torch.device["cuda" if torch.cuda.is_available() else "cpu"]
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
     Path(config["model_folder"]).mkdir(parents=True, exist_ok=True)
@@ -130,7 +132,7 @@ def train_model(config):
     # Define the tensorboard
     writer = SummaryWriter(config["experiment_name"]) #Visualizing the training process
 
-    optimizer = torch.optim.Adam(model.parameters, lr=config["lr"], eps=1e-9)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"], eps=1e-9)
 
     initial_epoch = 0
     global_step = 0
@@ -167,7 +169,7 @@ def train_model(config):
             
             #(Batch, seq_len, tgt_vocab_size) --> #(Batch * seq_len, tgt_vocab_size)
             loss = loss_fn(proj_output.view(-1, tokenizer_tgt.get_vocab_size()), label.view(-1))
-            batch_iter.set_postfix({f"loss": f"{loss.item():6.3f}"})
+            batch_iter.set_postfix({"loss": f"{loss.item():.3f}"})
             
             
             #Log the loss
