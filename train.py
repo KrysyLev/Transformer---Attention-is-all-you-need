@@ -169,7 +169,7 @@ def train_model(config):
             
             #(Batch, seq_len, tgt_vocab_size) --> #(Batch * seq_len, tgt_vocab_size)
             loss = loss_fn(proj_output.view(-1, tokenizer_tgt.get_vocab_size()), label.view(-1))
-            batch_iter.set_postfix({"loss": f"{loss.item():.3f}"})
+            batch_iter.set_postfix({"loss": f"{loss.item():6.3f}"})
             
             
             #Log the loss
