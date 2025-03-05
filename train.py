@@ -205,19 +205,16 @@ def get_model(config, vocab_src_len, vocab_tgt_len):
 
 def train_model(config):
     # Define the device
-    device = "cuda" if torch.cuda.is_available() else "mps" if torch.has_mps or torch.backends.mps.is_available() else "cpu"
-
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Using device:", device)
     if (device == 'cuda'):
         print(f"Device name: {torch.cuda.get_device_name(device.index)}")
         print(f"Device memory: {torch.cuda.get_device_properties(device.index).total_memory / 1024 ** 3} GB")
-    elif (device == 'mps'):
-        print(f"Device name: <mps>")
     else:
         print("NOTE: If you have a GPU, consider using it for training.")
         print("      On a Windows machine with NVidia GPU, check this video: https://www.youtube.com/watch?v=GMSjDTU8Zlc")
         print("      On a Mac machine, run: pip3 install --pre torch torchvision torchaudio torchtext --index-url https://download.pytorch.org/whl/nightly/cpu")
-    device = torch.device(device)
-
+        
     Path(config["model_folder"]).mkdir(parents=True, exist_ok=True)
 
     train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt = get_ds(
@@ -251,15 +248,8 @@ def train_model(config):
     torch.cuda.empty_cache()
     for epoch in range(initial_epoch, config["num_epochs"]):
         
-<<<<<<< HEAD
-        
-
-        batch_iter = tqdm(
-            train_dataloader, desc=f"Processing epoch: {epoch:02d}"
-        )  # Progress bar
-=======
         batch_iter = tqdm(train_dataloader, desc=f"Processing epoch: {epoch:02d}") #Progress bar
->>>>>>> parent of f2eb77c (Fix future warning on the torchmetrics into torchmetrics.text)
+
         for batch in batch_iter:
             model.train()
             
