@@ -12,10 +12,10 @@ def get_config():
         "lang_tgt": "it",
         "model_folder": "weights",
         "model_basename": "tmodel_",
-        "preload": "latest",
+        "preload": None,
         "tokenizer_file": "tokenizer_{0}.json",
         "experiment_name": "runs/tmodel",
-        "datasource": 'opus_books',
+        "datasource": "opus_books",
     }
 
 
@@ -24,6 +24,7 @@ def get_weight_file_path(config, epoch: str):
     model_basename = config["model_basename"]
     model_filename = f"{model_basename}{epoch}.pt"
     return str(Path(".") / model_folder / model_filename)
+
 
 # Find the latest weights file in the weights folder
 def latest_weights_file_path(config):
