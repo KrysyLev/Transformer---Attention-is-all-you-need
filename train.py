@@ -239,7 +239,10 @@ def get_model(config, vocab_src_len, vocab_tgt_len):
 def train_model(config):
     # Define the device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    print("Using device:", device)
+    if (device == 'cuda'):
+        print(f"Device name: {torch.cuda.get_device_name(device.index)}")
+        print(f"Device memory: {torch.cuda.get_device_properties(device.index).total_memory / 1024 ** 3} GB")
 
     Path(config["model_folder"]).mkdir(parents=True, exist_ok=True)
 
