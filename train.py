@@ -207,14 +207,16 @@ def train_model(config):
     # Define the device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Using device:", device)
-    if (device == 'cuda'):
-        print(f"Device name: {torch.cuda.get_device_name(device.index)}")
-        print(f"Device memory: {torch.cuda.get_device_properties(device.index).total_memory / 1024 ** 3} GB")
+
+    if device.type == "cuda":  # Use device.type instead of checking a string
+        device_index = torch.cuda.current_device()
+        print(f"Device name: {torch.cuda.get_device_name(device_index)}")
+        print(f"Device memory: {torch.cuda.get_device_properties(device_index).total_memory / 1024 ** 3:.2f} GB")
     else:
         print("NOTE: If you have a GPU, consider using it for training.")
-        print("      On a Windows machine with NVidia GPU, check this video: https://www.youtube.com/watch?v=GMSjDTU8Zlc")
+        print("      On a Windows machine with NVIDIA GPU, check this video: https://www.youtube.com/watch?v=GMSjDTU8Zlc")
         print("      On a Mac machine, run: pip3 install --pre torch torchvision torchaudio torchtext --index-url https://download.pytorch.org/whl/nightly/cpu")
-        
+    
     Path(config["model_folder"]).mkdir(parents=True, exist_ok=True)
 
     train_dataloader, val_dataloader, tokenizer_src, tokenizer_tgt = get_ds(
