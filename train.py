@@ -14,7 +14,7 @@ from tokenizers.trainers import WordLevelTrainer
 from tokenizers.pre_tokenizers import Whitespace
 
 from pathlib import Path
-from config import get_weight_file_path, get_config, get_weights_file_path, latest_weights_file_path
+from config import get_weights_file_path, get_config, latest_weights_file_path, latest_weights_file_path
 
 from model import build_transformer
 from torch.utils.tensorboard import SummaryWriter
