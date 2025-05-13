@@ -242,12 +242,14 @@ def get_ds(config):
     tgt_lang = config["lang_tgt"]
     seq_len = config["seq_len"]
 
-    # Load dataset
-    ds_raw = load_dataset("opus_books", f"{src_lang}-{tgt_lang}", split="train")
+    # Load train/valid/test dataset
+    train_dataset = load_dataset("harouzie/vi_en-translation", split="train")
+    valid_dataset = load_dataset("harouzie/vi_en-translation", split="validation")
+    test_dataset = load_dataset("harouzie/vi_en-translation", split="test")
 
     # Build Tokenizers
-    tokenizer_src = get_or_build_tokenizer(config=config, ds=ds_raw, lang=src_lang)
-    tokenizer_tgt = get_or_build_tokenizer(config=config, ds=ds_raw, lang=tgt_lang)
+    tokenizer_src = get_or_build_tokenizer(config=config, ds=train_dataset, lang=src_lang)
+    tokenizer_tgt = get_or_build_tokenizer(config=config, ds=train_dataset, lang=tgt_lang)
 
     # Divide dataset: 90% training, 10% validation
     train_ds_size = int(0.9 * len(ds_raw))
